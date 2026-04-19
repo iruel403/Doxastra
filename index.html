@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOXASTRA | The Hyper-Universe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;500&display=swap');
+
+        :root {
+            --gold: #c5a059;
+            --void: #08080a;
+            --paper: #121214;
+            --mana: #00e5ff;
+        }
+
+        body {
+            background-color: var(--void);
+            color: #d1d5db;
+            font-family: 'Crimson Pro', serif;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .heading {
+            font-family: 'Crimson Pro', serif;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+
+        /* Grimoire Aesthetic */
+        .page-container {
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(197, 160, 89, 0.05) 0%, transparent 70%),
+                linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.02));
+        }
+
+        .ritual-border {
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            position: relative;
+        }
+
+        .ritual-border::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .sigil-glow {
+            filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4));
+        }
+
+        .category-tag {
+            background: rgba(197, 160, 89, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        /* Scanline effect for that modern mix */
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 229, 255, 0.03);
+            position: fixed;
+            z-index: 99;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .system-card {
+            background: #121215;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .system-card:hover {
+            border-color: var(--mana);
+            box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 2rem 0;
+            opacity: 0.3;
+        }
+
+        .arcanist-btn {
+            background: linear-gradient(45deg, var(--void), #1a1a20);
+            border: 1px solid var(--mana);
+            color: var(--mana);
+            transition: all 0.3s ease;
+        }
+
+        .arcanist-btn:hover {
+            background: var(--mana);
+            color: var(--void);
+            box-shadow: 0 0 20px var(--mana);
+        }
+    </style>
+</head>
+<body class="page-container min-h-screen">
+    <div class="scanline"></div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 opacity-10 pointer-events-none overflow-hidden">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+                    <path d="M 100 0 L 0 0 0 100" fill="none" stroke="white" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="py-8 px-6 max-w-6xl mx-auto flex justify-between items-center relative z-10">
+        <div class="flex items-center gap-4">
+            <svg class="w-10 h-10 sigil-glow" viewBox="0 0 100 100" fill="none" stroke="var(--mana)" stroke-width="1.5">
+                <circle cx="50" cy="50" r="45" />
+                <path d="M50 5 L95 50 L50 95 L5 50 Z" />
+                <path d="M50 20 V80 M20 50 H80" />
+            </svg>
+            <h1 class="text-2xl font-bold tracking-[0.3em] text-white">DOXASTRA</h1>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-6 pt-16 pb-32 relative z-10">
+        
+        <!-- Hero Title -->
+        <section class="mb-32">
+            <p class="mono text-[var(--gold)] mb-4 text-center">EPOCH: POST-TOUCH | STATUS: DIVIDE CLOSED</p>
+            <h2 class="text-6xl md:text-8xl font-bold text-white text-center mb-8 leading-none">
+                The Field <br><span class="italic font-normal serif opacity-80">Remembers.</span>
+            </h2>
+            <div class="divider"></div>
+            <p class="text-2xl text-center max-w-3xl mx-auto font-light italic text-slate-400">
+                "Our universe is but a slice of a greater hyper-reality. Since the Touch, the barrier has fallen. Now, every soul is a conduit; every thought, an instruction."
+            </p>
+        </section>
+
+        <!-- Arcanist Spotlight -->
+        <section class="mb-32 text-center">
+            <div class="ritual-border p-8 inline-block bg-black/40">
+                <h3 class="text-xs mono text-[var(--mana)] tracking-[0.5em] mb-4">INTERNAL TOOLSET</h3>
+                <h2 class="text-4xl text-white mb-6">ARCANIST</h2>
+                <p class="text-slate-400 max-w-md mx-auto mb-8 text-sm">
+                    Automated magic circle generation engine. Input intent parameters to derive stable geometric configurations for the Field.
+                </p>
+                <a href="./Arcanist/index.html" class="arcanist-btn px-8 py-3 mono text-xs uppercase tracking-widest inline-block">
+                    Initialize Generator
+                </a>
+            </div>
+        </section>
+
+        <!-- The Three Pillars -->
+        <section id="systems" class="mb-32">
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="system-card p-8 ritual-border">
+                    <span class="mono text-[var(--mana)]">01_MANUAL</span>
+                    <h3 class="text-2xl text-white mt-4 mb-4">Internal Reflex</h3>
+                    <p class="text-slate-400 text-sm mb-6">Tracing the 'Maze' through pure mental focus. Raw, dangerous, and perfectly efficient. No tools but your own consciousness.</p>
+                    <div class="category-tag">Low Precision</div>
+                </div>
+
+                <div class="system-card p-8 ritual-border">
+                    <span class="mono text-[var(--mana)]">02_SPELLWARE</span>
+                    <h3 class="text-2xl text-white mt-4 mb-4">Techno-Tethers</h3>
+                    <p class="text-slate-400 text-sm mb-6">Automation through physical anchors. Storing intention into stones, chips, or steel. Reusable patterns for the modern age.</p>
+                    <div class="category-tag">High Reliability</div>
+                </div>
+
+                <div class="system-card p-8 ritual-border">
+                    <span class="mono text-[var(--mana)]">03_RITUAL</span>
+                    <h3 class="text-2xl text-white mt-4 mb-4">External Protocol</h3>
+                    <p class="text-slate-400 text-sm mb-6">Negotiated services with The Reach. Drawing the circle, providing resonance, and calling upon entities far greater than man.</p>
+                    <div class="category-tag">Infinite Range</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ritual Section (The Logic) -->
+        <section id="rituals" class="mb-32">
+            <div class="ritual-border p-12 bg-[#0c0c0e]">
+                <h2 class="text-4xl text-white mb-8">The Ritual Architecture</h2>
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <span class="mono text-[var(--gold)]">I.</span>
+                            <div>
+                                <h4 class="text-lg text-white">THE SCRIPT (The Intent)</h4>
+                                <p class="text-slate-500 text-sm">Symbolism isn't art; it's a configuration. The language used determines the 'Port' you are knocking on in the higher realms.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <span class="mono text-[var(--gold)]">II.</span>
+                            <div>
+                                <h4 class="text-lg text-white">RESONANCE (The Offering)</h4>
+                                <p class="text-slate-500 text-sm">Physical energy transduction. Blood, heat, or mineral resonance acts as a signal booster to bridge the dimensional gap.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <span class="mono text-[var(--gold)]">III.</span>
+                            <div>
+                                <h4 class="text-lg text-white">THE DEAL (Negotiation)</h4>
+                                <p class="text-slate-500 text-sm">Higher beings have autonomy. One does not 'command' a god; one opens a socket and requests a service level agreement.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center opacity-40">
+                        <!-- Abstract Magic Circle SVG -->
+                        <svg width="240" height="240" viewBox="0 0 100 100" stroke="var(--gold)" fill="none">
+                            <circle cx="50" cy="50" r="48" stroke-dasharray="2 2"/>
+                            <circle cx="50" cy="50" r="40" stroke-width="0.5"/>
+                            <path d="M50 10 L90 70 L10 70 Z" stroke-width="0.5" transform="rotate(180 50 50)"/>
+                            <path d="M50 10 L90 70 L10 70 Z" stroke-width="0.5"/>
+                            <rect x="35" y="35" width="30" height="30" stroke-width="0.5" transform="rotate(45 50 50)"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / Closing -->
+        <footer class="text-center pt-24 border-t border-white/5">
+            <div class="flex justify-center gap-6 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition">
+                <i class="fab fa-github"></i>
+                <i class="fas fa-microchip"></i>
+                <i class="fas fa-feather-alt"></i>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        console.log("Field resonance established. Arcanist modules detected in /Arcanist/.");
+    </script>
+</body>
+</html>
