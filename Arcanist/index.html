@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcanist Pro - Advanced Workstation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="h-screen w-screen grid-bg select-none" onclick="globalDeselect(event)">
+
+    <div id="toast">Notification</div>
+    <div id="ctxMenu" class="context-menu"></div>
+    <div id="ac-menu" class="hidden absolute bg-[#16161a] border border-[#333] rounded z-[10001] max-h-40 overflow-y-auto w-48 text-[11px] flex-col p-1 shadow-2xl"></div>
+
+    <!-- Top Bar -->
+    <nav class="fixed top-0 left-0 right-0 h-12 bg-black/90 backdrop-blur-md border-b border-white/10 flex items-center px-6 gap-8 z-[1000]">
+        <div class="flex flex-col">
+            <span class="cinzel text-sm font-bold tracking-[0.2em] text-blue-500">ARCANIST PRO</span>
+            <span class="text-[8px] text-slate-500 uppercase font-bold tracking-widest">Workspace v2.8</span>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="relative dropdown-container" id="menu-project">
+                <button onclick="toggleTopMenu(event, 'menu-project')" class="text-[10px] text-slate-400 hover:text-white uppercase font-bold transition-colors">Project ▾</button>
+                <div class="top-menu-dropdown">
+                    <button onclick="saveProjectFile()" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-blue-600">Export Workspace</button>
+                    <label class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-blue-600 cursor-pointer">
+                        Import Workspace <input type="file" id="projectInput" accept=".json" class="hidden" onchange="loadProjectFile(event)">
+                    </label>
+                    <div class="h-px bg-white/10 my-1"></div>
+                    <button onclick="exportHQImage(false)" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-green-600 text-green-300">Export Image (Transparent PNG)</button>
+                    <button onclick="exportHQImage(true)" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-green-600 text-green-300">Export Image (With BG)</button>
+                    <div class="h-px bg-white/10 my-1"></div>
+                    <button onclick="exportBlueprint()" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-purple-600 text-purple-300">Export Blueprint</button>
+                    <label class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-purple-600 cursor-pointer text-purple-300">
+                        Import Blueprint <input type="file" id="bpInput" accept=".json" class="hidden" onchange="loadBlueprintFile(event)">
+                    </label>
+                </div>
+            </div>
+
+            <div class="relative dropdown-container" id="menu-windows">
+                <button onclick="toggleTopMenu(event, 'menu-windows')" class="text-[10px] text-slate-400 hover:text-white uppercase font-bold transition-colors">Windows ▾</button>
+                <div class="top-menu-dropdown">
+                    <button onclick="toggleWindow('win-hierarchy')" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-blue-600">Hierarchy</button>
+                    <button onclick="toggleWindow('win-inspector')" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-blue-600 border-t border-white/5">Inspector</button>
+                    <button onclick="toggleWindow('win-library')" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-blue-600 border-t border-white/5">Library</button>
+                    <button onclick="toggleWindow('win-guide')" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-emerald-600 border-t border-white/5 text-emerald-400">Scripting Guide</button>
+                    <button onclick="addWorkspace('forge')" class="px-4 py-3 text-[10px] text-left uppercase font-bold hover:bg-purple-600 border-t border-white/5 text-purple-400">Open Symbol Forge</button>
+
+                </div>
+            </div>
+
+            <button onclick="toggleWindow('win-scripts')" class="text-[10px] text-yellow-400 hover:text-yellow-300 uppercase font-bold transition-colors">Script</button>
+            <button onclick="toggleWindow('win-settings')" class="text-[10px] text-slate-400 hover:text-white uppercase font-bold transition-colors">Settings</button>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <div class="flex items-center gap-6 mr-4 border-l border-white/10 pl-6">
+            <!-- Gizmo Toggle -->
+            <label class="text-[10px] text-slate-400 hover:text-white font-bold uppercase tracking-widest cursor-pointer flex items-center gap-2 transition-colors">
+                <input type="checkbox" id="ui-gizmo" checked class="accent-blue-500 w-3 h-3">
+                Move Arrows
+            </label>
+
+            <!-- Global Background Picker -->
+            <div class="flex items-center gap-3">
+                <span class="property-label mb-0">BG</span>
+                <input type="color" id="set-bgColor" value="#0c0c0e" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer">
+            </div>
+        </div>
+    </nav>
+
+    <!-- TAB BAR -->
+    <div id="tab-bar-container" class="w-full h-[32px] bg-black/60 border-b border-white/10 flex items-center px-2 z-40 relative">
+        <div id="tabs-list" class="flex gap-1 h-full items-end pt-1">
+            <!-- Populated dynamically -->
+        </div>
+        <div class="relative dropdown-container" id="menu-add-tab">
+            <button onclick="toggleTopMenu(event, 'menu-add-tab')" class="ml-2 text-slate-400 hover:text-white px-2 h-full flex items-center text-[11px] bg-white/5 hover:bg-white/10 rounded-t border border-b-0 border-white/10">+</button>
+            <div class="top-menu-dropdown !left-0 !right-auto !top-full mt-0">
+                <button onclick="addWorkspace('scene')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600">New Main Scene</button>
+                <button onclick="addWorkspace('forge')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600 border-t border-white/5">New Symbol Forge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PANES CONTAINER -->
+    <div id="panes-container" class="w-full relative" style="height: calc(100vh - 80px);">
+        <!-- SCENE PANE -->
+        <div id="pane-scene" class="w-full h-full relative">
+            <canvas id="mainCanvas" class="w-full h-full" ondragover="eDragOverCanvas(event)" ondrop="dropToActiveScene(event)"></canvas>
+        </div>
+
+        <!-- FORGE PANE -->
+        <div id="pane-forge" class="hidden w-full h-full relative overflow-y-auto bg-[#0c0c0e] custom-scrollbar">
+            <div class="w-full h-full flex flex-col p-4 gap-4 max-w-[1400px] mx-auto">
+                
+                <div class="flex justify-between items-end border-b border-white/10 pb-4">
+                    <div class="flex flex-col">
+                        <h2 class="cinzel text-xl font-bold text-purple-400 tracking-widest">SYMBOL FORGE</h2>
+                        <span class="text-[9px] text-slate-500 uppercase font-bold tracking-[0.3em]">Vector Design Engine</span>
+                    </div>
+                <div class="flex gap-3 items-center">
+                        <button onclick="(function(){ const sceneWs = project.workspaces.find(w => w.type === 'scene'); if(sceneWs) switchWorkspace(sceneWs.id); })()" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-slate-400 hover:text-white text-[11px] font-bold uppercase tracking-wider rounded transition-all" title="Return to Main Scene">← Scene</button>
+                        <button onclick="placeForgeInScene()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold uppercase tracking-wider rounded shadow-lg shadow-blue-500/20 transition-all">Place in Active Scene ⬎</button>
+                        <button onclick="saveForgeAsSymbol()" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold uppercase tracking-wider rounded shadow-lg shadow-purple-500/20 transition-all">Save to Library ▸</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex gap-6 min-h-0">
+                    <!-- LEFT COLUMN: Canvas & Tools -->
+                    <div class="flex-1 flex flex-col gap-4 min-h-0">
+                        
+                        <!-- TOOLBARS -->
+                        <div class="flex flex-col gap-2">
+                            <!-- Tool Buttons -->
+                            <div class="flex items-center gap-4 bg-black/40 p-2 rounded-lg border border-white/5">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Tools</span>
+                                <div id="forge-toolbar" class="flex bg-black border border-white/10 rounded overflow-hidden">
+                                    <button data-tool="freehand" onclick="setForgeTool('freehand')" class="px-4 py-1.5 text-[10px] font-bold transition-colors bg-blue-600 text-white">Free</button>
+                                    <button data-tool="line" onclick="setForgeTool('line')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white">Line</button>
+                                    <button data-tool="curve" onclick="setForgeTool('curve')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white">Curve</button>
+                                    <button data-tool="circle" onclick="setForgeTool('circle')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white">Circle</button>
+                                    <button data-tool="rect" onclick="setForgeTool('rect')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white">Rect</button>
+                                    <button data-tool="erase-vector" onclick="setForgeTool('erase-vector')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white border-l border-white/10">V-Erase</button>
+                                    <button data-tool="erase-mask" onclick="setForgeTool('erase-mask')" class="px-4 py-1.5 text-[10px] font-bold transition-colors text-slate-400 hover:text-white">M-Erase</button>
+                                </div>
+                                <div class="h-4 w-px bg-white/10 mx-1"></div>
+                                <div class="flex items-center gap-2 bg-black border border-white/10 rounded px-2 py-1">
+                                    <button id="btn-grid" onclick="toggleForgeGrid()" class="px-2 py-1 text-[9px] font-bold rounded bg-blue-900/50 text-blue-300">GRID</button>
+                                    <button id="btn-snap" onclick="toggleForgeSnap()" class="px-2 py-1 text-[9px] font-bold rounded text-slate-500">SNAP</button>
+                                    <input type="number" id="forge-gridsize" value="20" min="2" max="100" class="w-8 bg-transparent text-white text-[9px] text-center border-none outline-none" title="Grid Size">
+                                </div>
+                                <div class="flex-1"></div>
+                                <div id="forge-coords" class="px-3 py-1 bg-black/50 rounded font-mono text-[9px] text-slate-400">X: 0 Y: 0</div>
+                                <div class="flex gap-1">
+                                    <button onclick="drawUndo()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded">Undo</button>
+                                    <button onclick="drawClear()" class="px-3 py-1.5 bg-red-900/20 text-red-500 hover:bg-red-900/40 text-[10px] font-bold rounded">Clear</button>
+                                </div>
+                            </div>
+
+                            <!-- Stroke & Filter Settings -->
+                            <div class="flex items-center gap-6 bg-black/40 p-2 rounded-lg border border-white/5 flex-wrap">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Weight</span>
+                                    <input type="range" id="draw-weight" min="1" max="20" value="2" class="w-24 accent-purple-500">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Color</span>
+                                    <input type="color" id="draw-color" value="#ffffff" class="w-8 h-5 p-0 bg-transparent border-none cursor-pointer">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Smoothing</span>
+                                    <input type="range" id="draw-smooth" min="0" max="10" value="0" class="w-24 accent-blue-500">
+                                </div>
+                                <div class="h-6 w-px bg-white/10 mx-2"></div>
+                                <label class="px-3 py-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded text-[10px] font-bold uppercase cursor-pointer hover:bg-blue-600 hover:text-white transition-colors">
+                                    Trace Image <input type="file" accept="image/*" class="hidden" onchange="loadTraceImage(event)">
+                                </label>
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Opacity</span>
+                                    <input type="range" id="trace-opacity" min="0" max="1" step="0.05" value="0.5" class="w-16 accent-blue-500" oninput="updateTraceOpacity()">
+                                </div>
+                                <button onclick="clearTraceImage()" class="text-red-500 hover:text-red-400 text-sm">✕</button>
+                                <div class="flex-1"></div>
+                                <div class="flex items-center gap-3 border-l border-white/10 pl-6">
+                                    <span class="text-[9px] font-bold text-purple-400 uppercase tracking-widest">Global Tint</span>
+                                    <input type="color" id="recolor-pick" value="#ffffff" class="w-6 h-6 p-0 bg-transparent border-none cursor-pointer">
+                                    <button onclick="recolorStrokes()" class="px-3 py-1 bg-purple-600/20 text-purple-400 border border-purple-500/30 rounded text-[9px] font-bold uppercase hover:bg-purple-600 hover:text-white transition-colors">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CANVAS AREA -->
+                        <div class="flex-1 relative bg-black/20 rounded-xl border border-white/5 overflow-hidden flex items-center justify-center p-8 group">
+                            <div id="draw-container" class="relative shadow-2xl shadow-black/50" style="cursor:crosshair;">
+                                <img id="trace-bg" class="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-50 hidden" src="">
+                                <canvas id="forgeCanvas" width="800" height="600" class="bg-black/40 rounded-sm" style="touch-action:none;"></canvas>
+                            </div>
+                            
+                            <!-- Canvas Size Controls (Floating) -->
+                            <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase px-1">Size</span>
+                                <input type="number" id="forge-w" value="800" class="w-12 bg-white/5 text-white text-[10px] text-center rounded border border-white/10" oninput="resizeForgeCanvas()">
+                                <span class="text-slate-500 text-[10px]">×</span>
+                                <input type="number" id="forge-h" value="600" class="w-12 bg-white/5 text-white text-[10px] text-center rounded border border-white/10" oninput="resizeForgeCanvas()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Layers & Properties -->
+                    <div class="w-[300px] flex flex-col gap-4 shrink-0 overflow-hidden">
+                        <!-- Hierarchy / Layers -->
+                        <div class="flex-1 flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden">
+                            <div class="bg-white/5 px-4 py-3 border-b border-white/10 flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Layer Stack</span>
+                                <button onclick="addForgeLayer()" class="w-6 h-6 flex items-center justify-center bg-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white rounded-full transition-colors text-xs">+</button>
+                            </div>
+                            <div id="forge-hierarchy" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1 custom-scrollbar">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Properties -->
+                        <div class="h-[300px] flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden">
+                            <div class="bg-white/5 px-4 py-3 border-b border-white/10">
+                                <span class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Properties</span>
+                            </div>
+                            <div id="forge-properties" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
+                                <div class="text-slate-600 italic text-[11px] text-center py-10">Select an element to edit properties</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <!-- HIERARCHY -->
+    <div id="win-hierarchy" class="os-window" style="top: 70px; left: 20px;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-hierarchy')">
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Hierarchy</span>
+                
+                <div class="relative dropdown-container" id="menu-add-hierarchy">
+                    <button onclick="toggleTopMenu(event, 'menu-add-hierarchy')" class="w-4 h-4 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full text-[10px] hover:bg-blue-500 hover:text-white" title="Add Object">+</button>
+                    <div class="top-menu-dropdown !left-0 !right-auto !top-full mt-1 overflow-visible">
+                        <button onclick="addObject('magic')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600">Magic Circle</button>
+                        <button onclick="addObject('shape')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600 border-t border-white/5">True Polygon</button>
+                        <button onclick="addObject('text')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600 border-t border-white/5">Arcane Text</button>
+                        <button onclick="addObject('empty')" class="px-4 py-3 text-[10px] text-left hover:bg-blue-600 border-t border-white/5">Group Folder</button>
+                        
+                        <div class="relative w-full" onmouseenter="document.getElementById('examples-menu').classList.remove('hidden'); document.getElementById('examples-menu').classList.add('flex')" onmouseleave="document.getElementById('examples-menu').classList.add('hidden'); document.getElementById('examples-menu').classList.remove('flex')">
+                            <button class="w-full px-4 py-3 text-[10px] text-left hover:bg-emerald-600 border-t border-white/5 flex justify-between items-center text-emerald-400">
+                                Examples <span class="opacity-50">▸</span>
+                            </button>
+                            <div id="examples-menu" class="absolute left-full top-0 hidden flex-col bg-[#111] border border-white/10 rounded shadow-2xl min-w-[150px] z-[10000] overflow-visible">
+                                <!-- Examples populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <span class="close-btn danger" onclick="toggleWindow('win-hierarchy')">✕</span>
+        </div>
+        <div class="window-content w-64 h-[400px]" onclick="clearHierarchySelection(event)" oncontextmenu="handleHierarchyGlobalContext(event)">
+            <div id="tree-root" class="flex-1"></div>
+            <div id="hierarchy-dropzone" 
+                 class="h-10 border border-dashed border-white/10 mt-4 rounded flex items-center justify-center text-[9px] text-slate-600 uppercase font-bold"
+                 ondragover="eDragOver(event)" ondragleave="eDragLeave(event)" ondrop="eDrop(event, null)">
+                Drop for Root
+            </div>
+        </div>
+    </div>
+
+    <!-- INSPECTOR -->
+    <div id="win-inspector" class="os-window" style="top: 70px; right: 20px;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-inspector')">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Inspector</span>
+            <span class="close-btn danger" onclick="toggleWindow('win-inspector')">✕</span>
+        </div>
+        <div class="window-content w-80 h-[580px]">
+            <div id="insp-empty" class="text-center py-20 text-slate-700 italic text-xs">No Selection</div>
+            <div id="insp-body" class="hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <span class="property-label">Name</span>
+                        <input type="text" id="p-name" class="input-dark">
+                    </div>
+                    <div>
+                        <span class="property-label">Color</span>
+                        <input type="color" id="p-color" class="w-full h-7 p-0 border-0 bg-transparent cursor-pointer rounded">
+                    </div>
+                    <div id="prop-edgeIndex-container" class="hidden">
+                        <span class="property-label">Edge Assignment</span>
+                        <select id="p-edgeIndex" class="input-dark">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <span class="property-label">X Offset (Var or Num)</span>
+                        <input type="text" id="p-x" class="input-dark" placeholder="e.g. 0 or 'var1'">
+                    </div>
+                    <div>
+                        <span class="property-label">Y Offset (Var or Num)</span>
+                        <input type="text" id="p-y" class="input-dark" placeholder="e.g. 0 or 'var2'">
+                    </div>
+                    
+                    <div id="reset-pos-container" class="col-span-2 hidden mt-1">
+                        <button onclick="resetActivePosition()" class="w-full py-1.5 bg-blue-900/30 text-blue-400 border border-blue-500/30 text-[9px] uppercase font-bold rounded hover:bg-blue-500 hover:text-white transition-colors">Reset Position to Parent Edge</button>
+                    </div>
+                </div>
+
+                <!-- Shared Geom Props -->
+                <div id="geom-props" class="space-y-4 pt-4 border-t border-white/5">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Rotation</span>
+                            <input type="text" id="p-rotation-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                        </div>
+                        <input type="range" id="p-rotation" min="0" max="360">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Rotation Speed</span>
+                            <input type="text" id="p-rotationSpeed-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                        </div>
+                        <input type="range" id="p-rotationSpeed" min="-5" max="5" step="0.1">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Scale/Radius</span>
+                            <input type="text" id="p-radius-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                        </div>
+                        <input type="range" id="p-radius" min="0" max="800">
+                    </div>
+
+                    <!-- Circle Specifics -->
+                    <div id="props-magic" class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Symmetry</span>
+                                <input type="text" id="p-symmetry-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                            </div>
+                            <input type="range" id="p-symmetry" min="0" max="64">
+                        </div>
+                        
+                        <!-- Independent Edges Section -->
+                        <div class="p-3 bg-white/5 rounded space-y-2 border border-white/5">
+                            <label class="text-[10px] flex items-center gap-2 text-blue-300 font-semibold cursor-pointer">
+                                <input type="checkbox" id="p-independentEdges" class="accent-blue-500"> Non-Symmetrical Edges
+                            </label>
+                            <div id="edges-container" class="hidden flex flex-col gap-1 mt-2 max-h-32 overflow-y-auto">
+                                <!-- Edge List populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white/5 rounded space-y-3 border border-white/5">
+                            <label class="text-[10px] flex items-center gap-2 text-blue-200 font-semibold cursor-pointer"><input type="checkbox" id="p-drawOuterCircle" class="accent-blue-500"> Base Outer Circle</label>
+                            
+                            <div id="outer-circle-extras" class="pl-4 space-y-3 border-l border-white/10 ml-1">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Thickness</span>
+                                        <input type="text" id="p-outerThickness-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                                    </div>
+                                    <input type="range" id="p-outerThickness" min="0.5" max="20" step="0.5">
+                                </div>
+                                <label class="text-[9px] flex items-center gap-2 cursor-pointer"><input type="checkbox" id="p-outerDashed" class="accent-blue-500"> Dashed Line</label>
+                                <div id="dash-config-container">
+                                    <span class="property-label">Dash Pattern (e.g. 10, 5)</span>
+                                    <input type="text" id="p-outerDashConfig" class="input-dark" placeholder="10, 5">
+                                </div>
+                            </div>
+
+                            <label class="text-[10px] flex items-center gap-2 mt-2 cursor-pointer border-t border-white/5 pt-2"><input type="checkbox" id="p-doubleRim" class="accent-blue-500"> Double Ring</label>
+                            <div id="rim-gap-ctrl" class="pl-4 border-l border-white/10 ml-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Rim Spacing</span>
+                                    <input type="text" id="p-rimGap-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                                </div>
+                                <input type="range" id="p-rimGap" min="2" max="50">
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 bg-white/5 rounded space-y-3 border border-white/5">
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="text-[9px] flex items-center gap-2 text-blue-200"><input type="checkbox" id="p-drawPerimeter" class="accent-blue-500"> Perimeter Lines</label>
+                                <label class="text-[9px] flex items-center gap-2"><input type="checkbox" id="p-connectPoints" class="accent-blue-500"> Star Pattern</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] text-slate-400">Skip:</span>
+                                    <input type="number" id="p-connectPointsSkip" class="input-dark w-12 h-5 py-0 px-1 text-[10px]" min="1">
+                                </div>
+                                <label class="text-[9px] flex items-center gap-2"><input type="checkbox" id="p-connectMidPoints" class="accent-blue-500"> Midpoints</label>
+                                <label class="text-[9px] flex items-center gap-2"><input type="checkbox" id="p-linesCenter" class="accent-blue-500"> Spokes</label>
+                                <label class="text-[9px] flex items-center gap-2"><input type="checkbox" id="p-inscribe" class="accent-blue-500"> Nested Rings</label>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white/5 rounded space-y-3 border border-white/5">
+                            <div class="text-[10px] font-bold text-slate-300 mb-2 border-b border-white/10 pb-1">Symbols & Glyphs</div>
+                            <label class="text-[9px] flex items-center gap-2"><input type="checkbox" id="p-symbolsAtPoints" class="accent-blue-500"> Symbols at Points</label>
+                            <input type="text" id="p-symbolText" class="input-dark text-[10px]" placeholder="e.g. ☿♀♁♂♃♄">
+                            
+                            <label class="text-[9px] flex items-center gap-2 mt-2"><input type="checkbox" id="p-centerSymbol" class="accent-blue-500"> Center Symbol</label>
+                            <input type="text" id="p-centerSymbolText" class="input-dark text-[10px]" placeholder="e.g. 🜔">
+                        </div>
+                    </div>
+
+                    <!-- Text Specifics -->
+                    <div id="props-text" class="hidden space-y-4 p-3 bg-blue-500/5 rounded border border-blue-500/10">
+                        <div>
+                            <span class="property-label">Arcane Script</span>
+                            <input type="text" id="p-textContent" class="input-dark" placeholder="Enter text...">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Font Size</span>
+                                    <input type="text" id="p-fontSize-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                                </div>
+                                <input type="range" id="p-fontSize" min="8" max="200">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Weight</span>
+                                    <input type="text" id="p-fontWeight-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                                </div>
+                                <input type="range" id="p-fontWeight" min="100" max="900" step="100">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Spacing</span>
+                                <input type="text" id="p-letterSpacing-val" class="input-dark w-24 h-5 py-0 px-1 text-right text-[10px]">
+                            </div>
+                            <input type="range" id="p-letterSpacing" min="0" max="100">
+                        </div>
+                        <label class="text-[10px] flex items-center gap-2 cursor-pointer mt-2 text-blue-200">
+                            <input type="checkbox" id="p-straightText" class="accent-blue-500"> Un-bend / Straight Text
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-6 flex flex-col gap-2">
+                    <button onclick="duplicateActive()" class="w-full py-2 bg-white/5 text-[9px] uppercase font-bold rounded hover:bg-white/10">Duplicate</button>
+                    <button onclick="deleteActive()" class="w-full py-2 bg-red-900/10 text-red-500 text-[9px] uppercase font-bold rounded hover:bg-red-900/30">Delete Entity</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIBRARY -->
+    <div id="win-library" class="os-window hidden" style="bottom: 20px; left: 20px;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-library')">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Asset Library</span>
+            <span class="close-btn danger" onclick="toggleWindow('win-library')">✕</span>
+        </div>
+        <div class="flex bg-black/30">
+            <div id="t-bp" class="tab-btn active" onclick="setLibTab('bp')">Blueprints</div>
+            <div id="t-sm" class="tab-btn" onclick="setLibTab('sm')">Symbols</div>
+        </div>
+        <div class="window-content w-[400px] h-60">
+            <div id="view-bp" class="grid grid-cols-3 gap-2"></div>
+            <div id="view-sm" class="hidden">
+                <div class="flex gap-2 mb-3">
+                    <label class="flex-1 py-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white text-[10px] uppercase font-bold rounded text-center cursor-pointer transition-colors border border-blue-500/20">
+                        Files <input type="file" id="symbolInputFiles" multiple accept="image/*" class="hidden" onchange="importSymbols(event)">
+                    </label>
+                    <label class="flex-1 py-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white text-[10px] uppercase font-bold rounded text-center cursor-pointer transition-colors border border-blue-500/20">
+                        Folder <input type="file" id="symbolInputFolder" webkitdirectory directory multiple class="hidden" onchange="importSymbols(event)">
+                    </label>
+                </div>
+                <div id="symbol-list" class="grid grid-cols-4 gap-2"></div>
+                <div class="text-[9px] text-slate-500 text-center mt-4 italic" id="symbol-empty">Drag symbols to canvas, or click to spawn.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT WINDOW -->
+    <div id="win-scripts" class="os-window hidden" style="bottom: 20px; right: 380px; width: 450px; height: 350px;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-scripts')">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-yellow-500">Script</span>
+            <div class="flex gap-2">
+                <span class="close-btn" onclick="toggleFullscreen('win-scripts')" title="Toggle Fullscreen">⛶</span>
+                <span class="close-btn danger" onclick="toggleWindow('win-scripts')">✕</span>
+            </div>
+        </div>
+        <div class="window-content flex flex-col w-full h-full p-3 gap-2">
+            
+            <!-- List View -->
+            <div id="script-list-view" class="flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[9px] text-slate-400">Manage procedural generation or global variables.</span>
+                    <div class="flex gap-1.5 items-center">
+                        <button onclick="exportScripts()" class="btn-action !py-1 !text-[9px] bg-slate-600 hover:bg-slate-500" title="Export All Scripts">Export</button>
+                        <label class="btn-action !py-1 !text-[9px] bg-slate-600 hover:bg-slate-500 cursor-pointer mb-0" title="Import Scripts">
+                            Import <input type="file" accept=".json" class="hidden" onchange="importScripts(event)">
+                        </label>
+                        <button onclick="createNewScript()" class="btn-action !py-1 !text-[9px] bg-yellow-600 hover:bg-yellow-500">+ New Script</button>
+                    </div>
+                </div>
+                <div id="script-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <!-- Scripts populate here dynamically -->
+                </div>
+            </div>
+            
+            <!-- Edit View -->
+            <div id="script-edit-view" class="hidden flex-1 flex flex-col min-h-0">
+                <div class="flex gap-2 mb-2 shrink-0">
+                    <input type="text" id="script-edit-name" class="input-dark flex-1" placeholder="Script Name">
+                    <button onclick="runActiveScript()" class="btn-action bg-yellow-600 hover:bg-yellow-500">Run</button>
+                    <button onclick="saveAndCloseScript()" class="btn-action bg-green-600 hover:bg-green-500">Save</button>
+                    <button onclick="closeScriptEditor()" class="btn-action bg-slate-600 hover:bg-slate-500">Cancel</button>
+                </div>
+                <div class="flex-1 relative border border-white/10 rounded overflow-hidden">
+                    <textarea id="script-editor" class="input-dark absolute inset-0 w-full h-full border-0 rounded-none font-mono text-[12px] resize-none" spellcheck="false"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPTING GUIDE WINDOW -->
+    <div id="win-guide" class="os-window hidden" style="top: 100px; left: 100px; width: 450px; height: 500px;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-guide')">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Scripting Guide</span>
+            <span class="close-btn danger" onclick="toggleWindow('win-guide')">✕</span>
+        </div>
+        <div class="window-content select-text w-full overflow-y-auto p-4 space-y-4 pb-10">
+            <h3 class="text-emerald-400 font-bold text-[12px] uppercase tracking-widest border-b border-emerald-500/30 pb-1">1. Global Variables</h3>
+            <p class="text-[10px] text-slate-300 leading-relaxed">
+                You can define global variables and bind them to any object's properties dynamically. Create a script and write:<br>
+                <code class="bg-black/50 p-1.5 rounded text-yellow-300 block mt-2 mb-2 border border-white/5 font-mono">var runeRadius = 150;<br>var myPadding = 10;</code>
+                Then, in the Inspector for any shape, enter <code>runeRadius</code> into the <span class="font-bold">X, Y, or Scale/Radius</span> text fields instead of a regular number. (You can also type <code class="font-bold text-white">/</code> in any field to autocomplete your variables!)
+            </p>
+
+            <h3 class="text-emerald-400 font-bold text-[12px] uppercase tracking-widest border-b border-emerald-500/30 pb-1 mt-6">2. Procedural Generation (ArcanistAPI)</h3>
+            <p class="text-[10px] text-slate-300 leading-relaxed mb-2">
+                Scripting does not replace the node-based UI, but acts as an advanced secondary system to procedurally generate shapes through code using the <code>ArcanistAPI</code>.
+            </p>
+            <div class="bg-black/40 p-2 rounded border border-white/5 space-y-3">
+                <div>
+                    <span class="text-blue-300 font-mono text-[10px]">ArcanistAPI.createMagicCircle(name, parentId, props)</span>
+                    <p class="text-[9px] text-slate-400 mt-1">Generates a Magic Circle. Returns its newly generated ID string.</p>
+                </div>
+                <div class="border-t border-white/5 pt-2">
+                    <span class="text-blue-300 font-mono text-[10px]">ArcanistAPI.createPolygon(name, parentId, props)</span>
+                    <p class="text-[9px] text-slate-400 mt-1">Generates a True Polygon node.</p>
+                </div>
+                <div class="border-t border-white/5 pt-2">
+                    <span class="text-blue-300 font-mono text-[10px]">ArcanistAPI.createText(name, text, parentId, props)</span>
+                    <p class="text-[9px] text-slate-400 mt-1">Generates Arcane Text along an arc. The <code>text</code> param expects a string.</p>
+                </div>
+                <div class="border-t border-white/5 pt-2">
+                    <span class="text-blue-300 font-mono text-[10px]">ArcanistAPI.clearAll()</span>
+                    <p class="text-[9px] text-slate-400 mt-1">Wipes the entire workspace hierarchy clean.</p>
+                </div>
+            </div>
+
+            <h3 class="text-emerald-400 font-bold text-[12px] uppercase tracking-widest border-b border-emerald-500/30 pb-1 mt-6">3. Example Script</h3>
+            <p class="text-[10px] text-slate-300 leading-relaxed">
+                Copy and paste this snippet into a new Script and Run it:
+            </p>
+            <pre class="bg-black/50 p-3 rounded border border-white/5 text-[10px] text-yellow-200 font-mono overflow-x-auto whitespace-pre-wrap leading-loose">
+ArcanistAPI.clearAll();
+
+// 1. Create a base circle container
+let rootId = ArcanistAPI.createMagicCircle("Base Layer", null, {
+    radius: 200, 
+    symmetry: 6, 
+    doubleRim: true,
+    rotationSpeed: 0.2
+});
+
+// 2. Add an inscribed star inside the base
+ArcanistAPI.createPolygon("Inner Star", rootId, {
+    radius: 190, 
+    symmetry: 6, 
+    connectPoints: true,
+    connectPointsSkip: 2,
+    symbolsAtPoints: true,
+    symbolText: "☿♀♁♂♃♄",
+    rotationSpeed: -0.1
+});
+// 3. Add curved text to the base
+ArcanistAPI.createText("Rune Label", "IGNIS NATURA RENOVATUR", rootId, {
+    radius: 215,
+    fontSize: 14,
+    letterSpacing: 8
+});</pre>
+        </div>
+    </div>
+
+
+
+    <!-- SETTINGS -->
+    <div id="win-settings" class="os-window hidden" style="top: 100px; left: 35%;">
+        <div class="window-header" onmousedown="startWindowDrag(event, 'win-settings')">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-400">System Preferences</span>
+            <span class="close-btn danger" onclick="toggleWindow('win-settings')">✕</span>
+        </div>
+        <div class="window-content w-[380px] space-y-6">
+            
+            <div class="pt-2">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="property-label mb-0">Global Line Weight</span>
+                    <span class="text-[10px] text-blue-400 font-bold" id="v-lineWeight">1.5</span>
+                </div>
+                <input type="range" id="set-lineWeight" min="0.5" max="5" step="0.1">
+            </div>
+
+            <div class="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded">
+                <p class="text-[10px] text-yellow-200/80 mb-2 font-bold">Local File Access Sandbox</p>
+                <p class="text-[9px] text-yellow-200/60 leading-relaxed">
+                    Modern web browsers prevent websites from directly scanning local directories for security. 
+                    <br><br>
+                    To use custom symbols, either import them manually via the <strong>Library Window -> Symbols</strong> tab, or import an entire local folder using the button below.
+                </p>
+            </div>
+            
+            <div>
+                <label class="block w-full py-2 bg-white/10 text-center text-[10px] uppercase font-bold rounded hover:bg-white/20 cursor-pointer transition-colors">
+                    Import Local Workspace Folder
+                    <input type="file" id="folderInput" webkitdirectory directory multiple onchange="importWorkspace(event)" class="hidden">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="examples.js?v=2"></script>
+    <script src="forge.js?v=2"></script>
+    <script src="app.js?v=2"></script>
+</body>
+</html>
